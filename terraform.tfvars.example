@@ -1,0 +1,33 @@
+# Copy this file to terraform.tfvars and update with your values
+
+aws_region   = "us-east-1"
+environment  = "dev"
+project_name = "custom-login"
+
+user_pool_name   = "custom-login-user-pool"
+app_client_name  = "custom-login-app-client"
+
+# Update these URLs based on your frontend deployment
+callback_urls = [
+  "http://localhost:5173",
+  "http://localhost:5173/callback"
+]
+
+logout_urls = [
+  "http://localhost:5173",
+  "http://localhost:5173/logout"
+]
+
+# Password policy
+password_minimum_length    = 8
+password_require_lowercase = true
+password_require_uppercase = true
+password_require_numbers   = true
+password_require_symbols   = false
+
+# MFA configuration: OFF, OPTIONAL, or ON
+mfa_configuration = "OPTIONAL"
+
+# Email verification
+email_verification_subject = "Your verification code for Custom Login"
+email_verification_message = "Your verification code is {####}. Please enter this code to verify your email."
