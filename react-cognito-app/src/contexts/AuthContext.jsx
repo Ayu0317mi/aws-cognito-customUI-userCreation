@@ -47,12 +47,15 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
-    const signup = async (username, password, email, name) => {
+    const signup = async (username, password, email, name, waiverData) => {
         try {
             setError(null);
             const attributes = { email };
             if (name) {
                 attributes.name = name;
+            }
+            if (waiverData) {
+                attributes["custom:waiver_accepted"] = waiverData;
             }
             await signUp({
                 username,
