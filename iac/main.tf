@@ -22,6 +22,19 @@ resource "aws_cognito_user_pool" "this" {
       priority = 1
     }
   }
+
+  # Custom attributes
+  schema {
+    name                     = "waiver_accepted"
+    attribute_data_type      = "String"
+    mutable                  = true
+    developer_only_attribute = false
+
+    string_attribute_constraints {
+      min_length = 0
+      max_length = 256
+    }
+  }
 }
 
 # Cognito User Pool Client
