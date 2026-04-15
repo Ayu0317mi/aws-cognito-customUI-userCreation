@@ -20,6 +20,4 @@ const config = {
   },
 };
 
-console.log('Amplify Config:', JSON.stringify(config, null, 2));
-
 Amplify.configure(config);
