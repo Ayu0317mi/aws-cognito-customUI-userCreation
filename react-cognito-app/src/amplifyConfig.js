@@ -9,7 +9,7 @@ const config = {
       loginWith: {
         oauth: {
           domain: import.meta.env.VITE_COGNITO_DOMAIN,
-          scopes: ['openid', 'email', 'profile'],
+          scopes: ['openid', 'email', 'profile', 'aws.cognito.signin.user.admin'],
           redirectSignIn: [import.meta.env.VITE_REDIRECT_SIGN_IN || 'http://localhost:5173/'],
           redirectSignOut: [import.meta.env.VITE_REDIRECT_SIGN_OUT || 'http://localhost:5173/'],
           responseType: 'code',

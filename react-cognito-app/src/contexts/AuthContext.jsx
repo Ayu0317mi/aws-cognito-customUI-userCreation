@@ -20,6 +20,7 @@ const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
+    const [waiverAccepted, setWaiverAccepted] = useState(false);
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
@@ -27,10 +28,19 @@ export const AuthProvider = ({ children }) => {
     const getUser = async () => {
         try {
             const currentUser = await getCurrentUser();
+            let waiver = true;
+            try {
+                const attrs = await fetchUserAttributes();
+                const isFederated = !!attrs.identities;
+                waiver = !isFederated || !!attrs['custom:waiver_accepted'];
+            } catch {
+                waiver = true;
+            }
+            setWaiverAccepted(waiver);
             setUser(currentUser);
         } catch (err) {
-            console.error("Error fetching user: ", err);
             setUser(null);
+            setWaiverAccepted(false);
         } finally {
             setLoading(false);
         }
@@ -43,24 +53,13 @@ export const AuthProvider = ({ children }) => {
         const hubListenerCancel = Hub.listen('auth', ({ payload }) => {
             switch (payload.event) {
                 case 'signInWithRedirect':
-                    getUser().then(async () => {
-                        try {
-                            const attrs = await fetchUserAttributes();
-                            if (attrs['custom:waiver_accepted']) {
-                                navigate("/dashboard");
-                            } else {
-                                navigate("/waiver");
-                            }
-                        } catch {
-                            navigate("/waiver");
-                        }
-                    });
+                    // Re-fetch user and attributes after external provider OAuth redirect.
+                    // ProtectedRoute handles routing based on waiverAccepted state.
+                    getUser();
                     break;
                 case 'signInWithRedirect_failure':
                     setError(payload.data);
-                    break;
-                case 'customOAuthState':
-                    // Handle custom state if needed
+                    setLoading(false);
                     break;
             }
         });
@@ -121,6 +120,7 @@ export const AuthProvider = ({ children }) => {
         try {
             await signOut();
             setUser(null);
+            setWaiverAccepted(false);
             navigate("/login");
         } catch (err) {
             console.error("Error logging out: ", err);
@@ -148,6 +148,7 @@ export const AuthProvider = ({ children }) => {
             await updateUserAttributes({
                 userAttributes: { "custom:waiver_accepted": waiverData },
             });
+            setWaiverAccepted(true);
             navigate("/dashboard");
         } catch (err) {
             console.error("Error saving waiver: ", err);
@@ -159,6 +160,7 @@ export const AuthProvider = ({ children }) => {
         <AuthContext.Provider
             value={{
                 user,
+                waiverAccepted,
                 error,
                 loading,
                 login,

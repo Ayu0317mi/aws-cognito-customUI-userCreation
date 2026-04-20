@@ -21,8 +21,8 @@ export default function App() {
                     <Route path="/signup" element={<Signup />} />
                     <Route path="/confirm" element={<ConfirmUser />} />
                 </Route>
+                <Route path="/waiver" element={<Waiver />} />
                 <Route element={<ProtectedRoute />}>
-                    <Route path="/waiver" element={<Waiver />} />
                     <Route path="/dashboard" element={<Dashboard />} />
                 </Route>
                 <Route path="*" element={<Navigate to="/login" replace />} />

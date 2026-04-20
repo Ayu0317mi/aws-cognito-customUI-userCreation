@@ -1,11 +1,17 @@
 import { useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import "./Auth.css";
 
 const Waiver = () => {
   const [waiverAccepted, setWaiverAccepted] = useState(false);
   const [localError, setLocalError] = useState("");
-  const { acceptWaiver, error, loading } = useAuth();
+  const { signup, acceptWaiver, error, loading } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  // Present when arriving from /signup (email/password flow)
+  const signupData = location.state?.signupData;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -16,7 +22,23 @@ const Waiver = () => {
       return;
     }
 
-    await acceptWaiver();
+    const waiverData = JSON.stringify({
+      accepted: true,
+      timestamp: new Date().toISOString(),
+    });
+
+    if (signupData) {
+      // Email/password flow: create the account now with waiver data
+      const { name, email, password } = signupData;
+      await signup(email, password, email, name, waiverData);
+    } else {
+      // Google SSO flow: user is already authenticated, just save the attribute
+      await acceptWaiver();
+    }
+  };
+
+  const handleBack = () => {
+    navigate("/signup");
   };
 
   return (
@@ -63,13 +85,33 @@ const Waiver = () => {
             </div>
           )}
 
-          <button
-            type="submit"
-            className="auth-button"
-            disabled={loading}
-          >
-            {loading ? "Saving..." : "Accept & Continue"}
-          </button>
+          {signupData ? (
+            <div className="button-group">
+              <button
+                type="button"
+                className="auth-button secondary"
+                onClick={handleBack}
+                disabled={loading}
+              >
+                Back
+              </button>
+              <button
+                type="submit"
+                className="auth-button"
+                disabled={loading}
+              >
+                {loading ? "Creating account..." : "Accept"}
+              </button>
+            </div>
+          ) : (
+            <button
+              type="submit"
+              className="auth-button"
+              disabled={loading}
+            >
+              {loading ? "Saving..." : "Accept"}
+            </button>
+          )}
         </form>
       </div>
     </div>
