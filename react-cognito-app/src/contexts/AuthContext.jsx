@@ -7,7 +7,12 @@ import {
     signOut,
     getCurrentUser,
     autoSignIn,
+    signInWithRedirect,
+    fetchUserAttributes,
+    updateUserAttributes,
 } from "aws-amplify/auth";
+
+import { Hub } from "aws-amplify/utils";
 
 import { useNavigate } from "react-router-dom";
 
@@ -33,6 +38,34 @@ export const AuthProvider = ({ children }) => {
 
     useEffect(() => {
         getUser();
+
+        // Listen for OAuth sign-in events
+        const hubListenerCancel = Hub.listen('auth', ({ payload }) => {
+            switch (payload.event) {
+                case 'signInWithRedirect':
+                    getUser().then(async () => {
+                        try {
+                            const attrs = await fetchUserAttributes();
+                            if (attrs['custom:waiver_accepted']) {
+                                navigate("/dashboard");
+                            } else {
+                                navigate("/waiver");
+                            }
+                        } catch {
+                            navigate("/waiver");
+                        }
+                    });
+                    break;
+                case 'signInWithRedirect_failure':
+                    setError(payload.data);
+                    break;
+                case 'customOAuthState':
+                    // Handle custom state if needed
+                    break;
+            }
+        });
+
+        return () => hubListenerCancel();
     }, []);
 
     const login = async (username, password) => {
@@ -95,6 +128,33 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
+    const loginWithGoogle = async () => {
+        try {
+            setError(null);
+            await signInWithRedirect({ provider: 'Google' });
+        } catch (err) {
+            console.error("Error signing in with Google: ", err);
+            setError(err);
+        }
+    };
+
+    const acceptWaiver = async () => {
+        try {
+            setError(null);
+            const waiverData = JSON.stringify({
+                accepted: true,
+                timestamp: new Date().toISOString(),
+            });
+            await updateUserAttributes({
+                userAttributes: { "custom:waiver_accepted": waiverData },
+            });
+            navigate("/dashboard");
+        } catch (err) {
+            console.error("Error saving waiver: ", err);
+            setError(err);
+        }
+    };
+
     return (
         <AuthContext.Provider
             value={{
@@ -105,6 +165,8 @@ export const AuthProvider = ({ children }) => {
                 signup,
                 confirmUser,
                 logout,
+                loginWithGoogle,
+                acceptWaiver,
             }}
         >
             {children}

@@ -4,6 +4,7 @@ import Login from "./routes/Login";
 import Signup from "./routes/Signup";
 import ConfirmUser from "./routes/ConfirmUser";
 import Dashboard from "./routes/Dashboard";
+import Waiver from "./routes/Waiver";
 
 import ProtectedRoute from "./components/ProtectedRoute";
 import PublicRoute from "./components/PublicRoute";
@@ -21,6 +22,7 @@ export default function App() {
                     <Route path="/confirm" element={<ConfirmUser />} />
                 </Route>
                 <Route element={<ProtectedRoute />}>
+                    <Route path="/waiver" element={<Waiver />} />
                     <Route path="/dashboard" element={<Dashboard />} />
                 </Route>
                 <Route path="*" element={<Navigate to="/login" replace />} />
